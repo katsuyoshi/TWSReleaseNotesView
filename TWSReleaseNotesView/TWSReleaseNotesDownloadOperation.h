@@ -19,6 +19,9 @@
 
 /** @name Getting main properties */
 
+/// The downloaded whole release information
+@property (readonly, copy, nonatomic) NSDictionary *releaseInformation;
+
 /// The downloaded release notes text.
 @property (readonly, copy, nonatomic) NSString *releaseNotesText;
 

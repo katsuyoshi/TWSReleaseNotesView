@@ -20,6 +20,7 @@ static const NSInteger kTWSReleaseNotesDownloadOperationDecodeErrorCode = 0;
 @property (strong, nonatomic) NSURL *requestURL;
 @property (strong, nonatomic) NSURLConnection *urlConnection;
 @property (readwrite, strong, nonatomic) NSError *error;
+@property (readwrite, copy, nonatomic) NSDictionary *releaseInformation;
 @property (readwrite, copy, nonatomic) NSString *releaseNotesText;
 @property (strong, nonatomic) NSMutableData *bufferData;
 @property (strong, nonatomic) NSData *appMetadata;
@@ -115,6 +116,7 @@ static const NSInteger kTWSReleaseNotesDownloadOperationDecodeErrorCode = 0;
                 
                 if ([metadataObject isKindOfClass:[NSDictionary class]])
                 {
+                    self.releaseInformation = metadataObject;
                     NSDictionary *metadataDictionary = (NSDictionary *)metadataObject;
                     id releaseNotesObject = metadataDictionary[kTWSReleaseNotesDownloadOperationReleaseNotesKey];
                     

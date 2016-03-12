@@ -54,6 +54,7 @@ static const NSTimeInterval kTWSReleaseNotesViewTransitionDuration = 0.2f;
 @property (strong, nonatomic) UILabel *titleLabel;
 @property (strong, nonatomic) TWSUnselectableTextView *textView;
 @property (strong, nonatomic) UIButton *closeButton;
+@property (readwrite, assign) NSComparisonResult versionComparision;
 
 - (id)initWithReleaseNotesTitle:(NSString *)releaseNotesTitle text:(NSString *)releaseNotesText closeButtonTitle:(NSString *)closeButtonTitle;
 - (void)setupSubviews;
@@ -68,6 +69,8 @@ static const NSTimeInterval kTWSReleaseNotesViewTransitionDuration = 0.2f;
 - (void)closeButtonDragEnter:(id)sender;
 - (void)dismiss;
 + (void)storeCurrentAppVersionString;
++ (NSString *)currentVersion;
++ (NSComparisonResult)compareVersions:(NSString *)versionA to:(NSString *)versionB;
 
 @end
 
@@ -172,13 +175,29 @@ static const NSTimeInterval kTWSReleaseNotesViewTransitionDuration = 0.2f;
             {
                 // Get release note text
                 NSString *releaseNotesText = strongOperation.releaseNotesText;
+                NSString *releaseVersion = strongOperation.releaseInformation[@"version"];
+                
                 
                 [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                     // Create and show release notes view
-                    TWSReleaseNotesView *releaseNotesView = [TWSReleaseNotesView viewWithReleaseNotesTitle:releaseNotesTitle text:releaseNotesText closeButtonTitle:closeButtonTitle];
+                    NSString *title = releaseNotesTitle;
+                    NSString *text = nil;
+                    NSComparisonResult result = [self compareVersions:self.currentVersion to:releaseVersion];
+                    
+                    switch (result) {
+                    case NSOrderedAscending:
+                        title = NSLocalizedString(@"Notice", nil);
+                        text = NSLocalizedString(@"There is the new version of this app on the iTunes store. Please keep updating it.", nil);
+                        break;
+                    default:
+                        text = releaseNotesText;
+                        break;
+                    }
+                    TWSReleaseNotesView *releaseNotesView = [TWSReleaseNotesView viewWithReleaseNotesTitle:title text:text closeButtonTitle:closeButtonTitle];
+                    releaseNotesView.versionComparision = result;
                     
                     // Perform completion block 
-                    completionBlock(releaseNotesView, releaseNotesText, nil);
+                    completionBlock(releaseNotesView, text, nil);
                 }];
             }
         }
@@ -514,6 +533,41 @@ static const NSTimeInterval kTWSReleaseNotesViewTransitionDuration = 0.2f;
     _releaseNotesText = [releaseNotesText copy];
     [_textView setText:_releaseNotesText];
     [self showInView:containerView];
+}
+
++ (NSString *)currentVersion
+{
+    return [[[NSBundle mainBundle] infoDictionary] valueForKey:@"CFBundleShortVersionString"];
+}
+
++ (NSComparisonResult)compareVersions:(NSString *)versionA to:(NSString *)versionB
+{
+    NSMutableArray *numbersA = [[versionA componentsSeparatedByString:@"."] mutableCopy];
+    NSMutableArray *numbersB = [[versionB componentsSeparatedByString:@"."] mutableCopy];
+    int count = (int)MAX([numbersA count], [numbersB count]);
+    for (int i = 0; i < count; i++) {
+        if ([numbersA count] <= i) {
+            [numbersA addObject:@""];
+        }
+        if ([numbersB count] <= i) {
+            [numbersB addObject:@""];
+        }
+        NSString *a = [numbersA objectAtIndex:i];
+        NSString *b = [numbersB objectAtIndex:i];
+        if (a && b) {
+          NSComparisonResult r = [a compare:b];
+          if (r != NSOrderedSame) {
+              return r;
+          }
+        } else
+        if (a) {
+            return NSOrderedDescending;
+        } else
+        if (b) {
+            return NSOrderedAscending;
+        }
+    }
+    return NSOrderedSame;
 }
 
 @end

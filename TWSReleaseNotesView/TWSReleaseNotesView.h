@@ -87,6 +87,9 @@
 /// The shadow offset for the close button. Default is `(0.0f, -1.0f)`.
 @property (assign, nonatomic) CGSize closeButtonShadowOffset;
 
+/// The comparision result between current app version and release note app version.
+@property (readonly, assign) NSComparisonResult versionComparision;
+
 
 /** @name Creating the release notes view */
 
