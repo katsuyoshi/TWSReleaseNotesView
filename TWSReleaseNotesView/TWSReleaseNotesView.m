@@ -318,6 +318,9 @@ static const NSTimeInterval kTWSReleaseNotesViewTransitionDuration = 0.2f;
     // Update main properties
     CGRect containerBounds = [containerView bounds];
     [self setFrame:containerBounds];
+    if ([containerView isKindOfClass:[UIScrollView class]]) {
+        containerBounds.origin = CGPointZero;
+    }
     
     // Calculate text view height
     CGFloat textViewWidth = kTWSReleaseNotesViewContainerViewWidth - 2*kTWSReleaseNotesViewInnerContainerSidePadding;
