@@ -36,8 +36,6 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
     
-    [self setWantsFullScreenLayout:YES];
-    
 	BOOL bDoesSupportResizableImageWithCapInsets = [[[UIImage alloc] init] respondsToSelector:@selector(resizableImageWithCapInsets:resizingMode:)];
 	UIImage *buttonNormalImage = [UIImage imageNamed:@"btn_bg"], *buttonHighlightedImage = [UIImage imageNamed:@"btn_bg_hl"];
 	
