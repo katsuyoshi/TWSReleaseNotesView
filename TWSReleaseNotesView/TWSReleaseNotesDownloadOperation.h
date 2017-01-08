@@ -14,7 +14,7 @@
  The result of the operation is accessible in the `completionBlock`, using the <releaseNotesText> and the <error> properties.
  
  */
-@interface TWSReleaseNotesDownloadOperation : NSOperation
+@interface TWSReleaseNotesDownloadOperation : NSOperation <NSURLSessionDataDelegate>
 
 
 /** @name Getting main properties */

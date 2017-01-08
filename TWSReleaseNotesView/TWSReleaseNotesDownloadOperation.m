@@ -62,9 +62,12 @@ static const NSInteger kTWSReleaseNotesDownloadOperationDecodeErrorCode = 0;
     self.isFinished = NO;
     
     // Setup URL connection
-    [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-        self.urlConnection = [NSURLConnection connectionWithRequest:request delegate:self];
-    }];
+    NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:config
+                                                      delegate:self
+                                                 delegateQueue:[NSOperationQueue mainQueue]];
+    NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
+    [task resume];
 }
 
 - (void)setIsExecuting:(BOOL)isExecuting
@@ -141,47 +144,35 @@ static const NSInteger kTWSReleaseNotesDownloadOperationDecodeErrorCode = 0;
     self.isFinished = YES;
 }
 
-#pragma mark - NSURLConnectionDelegate Methods
+#pragma mark - NSURLSessionDataDelegate Methods
 
-- (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)response
-{
-    return request;
-}
 
-- (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse
-{
-    return cachedResponse;
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    // Setup buffer
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+                                 didReceiveResponse:(NSURLResponse *)response
+                                  completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+ 
     self.bufferData = [NSMutableData data];
+    completionHandler(NSURLSessionResponseAllow);
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-    // Append data to buffer
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
     [self.bufferData appendData:data];
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-    // Set release notes data
-    self.appMetadata = self.bufferData;
-    self.bufferData = nil;
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
+    if (!error) {
+        self.appMetadata = self.bufferData;
+        self.bufferData = nil;
     
-    // Extract release notes text
-    [self extractReleaseNotes];
+        // Extract release notes text
+        [self extractReleaseNotes];
+    } else {
+        self.error = error;
+        
+        self.isExecuting = NO;
+        self.isFinished = YES;
+    }
 }
 
-- (void)connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
-{
-    // Set error
-    self.error = error;
-        
-    self.isExecuting = NO;
-    self.isFinished = YES;
-}
 
 @end
